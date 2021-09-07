@@ -10,6 +10,7 @@
   ],
   "private": true,
   "scripts": {
+    "postinstall": "patch-package",
     "react-app:build": "yarn workspace @scaffold-eth/react-app build --max-old-space-size=12288",
     "react-app:eject": "yarn workspace @scaffold-eth/react-app eject",
     "react-app:start": "yarn workspace @scaffold-eth/react-app start",
@@ -61,5 +62,13 @@
       "**/hardhat",
       "**/hardhat/**"
     ]
+  },
+  "devDependencies": {
+    "patch-package": "^6.4.7"
+  },
+  "resolutions": {
+    "autoprefixer": "^10.3.3",
+    "postcss": "^8.3.6",
+    "postcss-normalize": "^10.0.0"
   }
 }
