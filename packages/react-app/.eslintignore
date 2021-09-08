@@ -1,2 +1,10 @@
 build/
 node_modules/
+
+**/*.less
+**/*.css
+**/*.scss
+**/*.json
+**/*.png
+**/*.svg
+src/assets.js
