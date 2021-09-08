@@ -1,12 +1,14 @@
-import React from "react";
-import Blockies from "react-blockies";
+import React from 'react';
+import Blockies from 'react-blockies';
 
-// provides a blockie image for the address using "react-blockies" library
+// provides a blockie image for the address using 'react-blockies' library
 
-export default function Blockie(props) {
-  if (!props.address || typeof props.address.toLowerCase !== "function") {
+const Blockie = ({ address, ...rest }) => {
+  if (!address || typeof address.toLowerCase !== 'function') {
     return <span />;
   }
   // eslint-disable-next-line react/jsx-props-no-spreading
-  return <Blockies seed={props.address.toLowerCase()} {...props} />;
-}
+  return <Blockies seed={address.toLowerCase()} {...rest} />;
+};
+
+export default Blockie;

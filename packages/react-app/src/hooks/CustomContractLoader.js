@@ -1,7 +1,7 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable global-require */
-import { Contract } from "@ethersproject/contracts";
-import { useState, useEffect } from "react";
+import { Contract } from '@ethersproject/contracts';
+import { useState, useEffect } from 'react';
 
 /*
   when you want to load a local contract's abi but supply a custom address
@@ -14,20 +14,20 @@ import { useState, useEffect } from "react";
 
   ~ How can I use? ~
 
-  const customContract = useCustomContractLoader(localProvider, "YourContract", customAddress)
+  const customContract = useCustomContractLoader(localProvider, 'YourContract', customAddress)
 
   ~ Features ~
 
   - Specify the localProvider
-  - Specify the name of the contract, in this case it is "YourContract"
+  - Specify the name of the contract, in this case it is 'YourContract'
   - Specify the customAddress of your contract
 */
 
-export default function useCustomContractLoader(provider, contractName, address) {
+const useCustomContractLoader = (provider, contractName, address) => {
   const [contract, setContract] = useState();
   useEffect(() => {
     async function loadContract() {
-      if (typeof provider !== "undefined" && contractName && address) {
+      if (typeof provider !== 'undefined' && contractName && address) {
         try {
           // we need to check to see if this provider has a signer or not
           let signer;
@@ -47,11 +47,14 @@ export default function useCustomContractLoader(provider, contractName, address)
 
           setContract(customContract);
         } catch (e) {
-          console.log("ERROR LOADING CONTRACTS!!", e);
+          console.log('ERROR LOADING CONTRACTS!!', e);
         }
       }
     }
     loadContract();
   }, [provider, contractName, address]);
+
   return contract;
-}
+};
+
+export default useCustomContractLoader;

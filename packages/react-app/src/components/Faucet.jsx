@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from "react";
-import { Input, Button, Tooltip } from "antd";
-import Blockies from "react-blockies";
-import { SendOutlined } from "@ant-design/icons";
-import { parseEther } from "@ethersproject/units";
-import { Transactor } from "../helpers";
-import Wallet from "./Wallet";
-import { useLookupAddress } from "eth-hooks";
+import Blockies from 'react-blockies';
+import React, { useState, useCallback } from 'react';
+import { Input, Button, Tooltip } from 'antd';
+import { parseEther } from '@ethersproject/units';
+import { SendOutlined } from '@ant-design/icons';
+import { useLookupAddress } from 'eth-hooks';
+
+import { Transactor } from '../helpers';
+
+import Wallet from './Wallet';
 
 // improved a bit by converting address to ens if it exists
 // added option to directly input ens name
@@ -22,7 +24,7 @@ import { useLookupAddress } from "eth-hooks";
     price={price}
     localProvider={localProvider}
     ensProvider={mainnetProvider}
-    placeholder={"Send local faucet"}
+    placeholder={'Send local faucet'}
   />
 
   ~ Features ~
@@ -30,73 +32,82 @@ import { useLookupAddress } from "eth-hooks";
   - Provide price={price} of ether and convert between USD and ETH in a wallet
   - Provide localProvider={localProvider} to be able to send ETH to given address
   - Provide ensProvider={mainnetProvider} and your address will be replaced by ENS name
-              (ex. "0xa870" => "user.eth") or you can enter directly ENS name instead of address
+              (ex. '0xa870' => 'user.eth') or you can enter directly ENS name instead of address
               works both in input field & wallet
-  - Provide placeholder="Send local faucet" value for the input
+  - Provide placeholder="Send local faucet' value for the input
 */
 
-export default function Faucet(props) {
+const Faucet = ({
+  ensProvider,
+  localProvider,
+  onChange,
+  placeholder,
+  price,
+}) => {
   const [address, setAddress] = useState();
+  const blockie = (address && typeof address.toLowerCase === 'function')
+    ? <Blockies seed={address.toLowerCase()} size={8} scale={4} />
+    : <div />;
 
-  let blockie;
-  if (address && typeof address.toLowerCase === "function") {
-    blockie = <Blockies seed={address.toLowerCase()} size={8} scale={4} />;
-  } else {
-    blockie = <div />;
-  }
-
-  const ens = useLookupAddress(props.ensProvider, address);
+  const ens = useLookupAddress(ensProvider, address);
 
   const updateAddress = useCallback(
-    async newValue => {
-      if (typeof newValue !== "undefined") {
-        let address = newValue;
-        if (address.indexOf(".eth") > 0 || address.indexOf(".xyz") > 0) {
+    async (newValue) => {
+      if (typeof newValue !== 'undefined') {
+        let _address = newValue;
+        if (_address.indexOf('.eth') > 0 || _address.indexOf('.xyz') > 0) {
           try {
-            const possibleAddress = await props.ensProvider.resolveName(address);
+            const possibleAddress = await ensProvider.resolveName(_address);
             if (possibleAddress) {
-              address = possibleAddress;
+              _address = possibleAddress;
             }
             // eslint-disable-next-line no-empty
           } catch (e) {}
         }
-        setAddress(address);
+        setAddress(_address);
       }
     },
-    [props.ensProvider, props.onChange],
+    [ensProvider],
   );
 
-  const tx = Transactor(props.localProvider);
+  const tx = Transactor(localProvider);
 
   return (
     <span>
       <Input
         size="large"
-        placeholder={props.placeholder ? props.placeholder : "local faucet"}
+        placeholder={placeholder || 'local faucet'}
         prefix={blockie}
-        //value={address}
+        // value={address}
         value={ens || address}
-        onChange={e => {
-          //setAddress(e.target.value);
+        onChange={(e) => {
+          // setAddress(e.target.value);
           updateAddress(e.target.value);
         }}
-        suffix={
+        suffix={(
           <Tooltip title="Faucet: Send local ether to an address.">
             <Button
               onClick={() => {
                 tx({
                   to: address,
-                  value: parseEther("0.5"),
+                  value: parseEther('0.5'),
                 });
-                setAddress("");
+                setAddress('');
               }}
               shape="circle"
               icon={<SendOutlined />}
             />
-            <Wallet color="#888888" provider={props.localProvider} ensProvider={props.ensProvider} price={props.price} />
+            <Wallet
+              color="#888888"
+              ensProvider={ensProvider}
+              price={price}
+              provider={localProvider}
+            />
           </Tooltip>
-        }
+        )}
       />
     </span>
   );
-}
+};
+
+export default Faucet;

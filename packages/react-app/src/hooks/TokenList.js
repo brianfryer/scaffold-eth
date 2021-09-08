@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 /*
   ~ What it does? ~
@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
   ~ How can I use? ~
 
   const tokenList = useTokenList(); <- default returns the Unsiwap tokens
-  const tokenList = useTokenList("https://gateway.ipfs.io/ipns/tokens.uniswap.org");
+  const tokenList = useTokenList('https://gateway.ipfs.io/ipns/tokens.uniswap.org');
 
   ~ Features ~
 
@@ -17,33 +17,25 @@ import { useState, useEffect } from "react";
 
 const useTokenList = (tokenListUri, chainId) => {
   const [tokenList, setTokenList] = useState([]);
-
-  let _tokenListUri = tokenListUri || "https://gateway.ipfs.io/ipns/tokens.uniswap.org"
+  const _tokenListUri = tokenListUri || 'https://gateway.ipfs.io/ipns/tokens.uniswap.org';
 
   useEffect(() => {
-
     const getTokenList = async () => {
       try {
-      let tokenList = await fetch(_tokenListUri)
-      let tokenListJson = await tokenList.json()
-      let _tokenList
+        const _tokenList = await fetch(_tokenListUri);
+        const tokenListJson = await _tokenList.json();
+        const __tokenList = chainId
+          ? tokenListJson.tokens.filter((t) => t.chainId === chainId)
+          : tokenListJson;
 
-      if(chainId) {
-        _tokenList = tokenListJson.tokens.filter(function (t) {
-          return t.chainId === chainId
-        })
-      } else {
-        _tokenList = tokenListJson
+        setTokenList(__tokenList.tokens);
+      } catch (e) {
+        console.log(e);
       }
+    };
 
-      setTokenList(_tokenList.tokens)
-
-    } catch (e) {
-      console.log(e)
-    }
-    }
-    getTokenList()
-  },[tokenListUri])
+    getTokenList();
+  }, [_tokenListUri, chainId]);
 
   return tokenList;
 };

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { AddressZero } from "@ethersproject/constants";
+import { AddressZero } from '@ethersproject/constants';
+import { useState, useEffect } from 'react';
 
 /*
   ~ What it does? ~
@@ -8,7 +8,7 @@ import { AddressZero } from "@ethersproject/constants";
 
   ~ How can I use? ~
 
-  const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
+  const addressFromENS = useResolveName(mainnetProvider, 'austingriffith.eth');
 
   ~ Features ~
 

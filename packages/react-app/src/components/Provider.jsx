@@ -1,35 +1,35 @@
-import React, { useState } from "react";
-import { Button, Badge } from "antd";
-import { usePoller, useBlockNumber } from "eth-hooks";
+import React, { useState } from 'react';
+import { Button, Badge } from 'antd';
+import { usePoller, useBlockNumber } from 'eth-hooks';
 // import { WalletOutlined } from '@ant-design/icons';
 
-import Address from "./Address";
+import Address from './Address';
 
-export default function Provider(props) {
+const Provider = ({ provider, name }) => {
   const [showMore, setShowMore] = useState(false);
-  const [status, setStatus] = useState("processing");
+  const [status, setStatus] = useState('processing');
   const [network, setNetwork] = useState();
   const [signer, setSigner] = useState();
   const [address, setAddress] = useState();
 
-  const blockNumber = useBlockNumber(props.provider);
+  const blockNumber = useBlockNumber(provider);
 
   usePoller(async () => {
-    if (props.provider && typeof props.provider.getNetwork === "function") {
+    if (provider && typeof provider.getNetwork === 'function') {
       try {
-        const newNetwork = await props.provider.getNetwork();
+        const newNetwork = await provider.getNetwork();
         setNetwork(newNetwork);
         if (newNetwork.chainId > 0) {
-          setStatus("success");
+          setStatus('success');
         } else {
-          setStatus("warning");
+          setStatus('warning');
         }
       } catch (e) {
         console.log(e);
-        setStatus("processing");
+        setStatus('processing');
       }
       try {
-        const newSigner = await props.provider.getSigner();
+        const newSigner = await provider.getSigner();
         setSigner(newSigner);
         const newAddress = await newSigner.getAddress();
         setAddress(newAddress);
@@ -39,10 +39,10 @@ export default function Provider(props) {
   }, 1377);
 
   if (
-    typeof props.provider === "undefined" ||
-    typeof props.provider.getNetwork !== "function" ||
-    !network ||
-    !network.chainId
+    typeof provider === 'undefined'
+    || typeof provider.getNetwork !== 'function'
+    || !network
+    || !network.chainId
   ) {
     return (
       <Button
@@ -52,29 +52,30 @@ export default function Provider(props) {
           setShowMore(!showMore);
         }}
       >
-        <Badge status={status} /> {props.name}
+        <Badge status={status} />
+        {name}
       </Button>
     );
   }
 
-  let showExtra = "";
+  let showExtra = '';
   if (showMore) {
     showExtra = (
       <span>
         <span style={{ padding: 3 }}>
           id:
-          {network ? network.chainId : ""}
+          {network ? network.chainId : ''}
         </span>
         <span style={{ padding: 3 }}>
           name:
-          {network ? network.name : ""}
+          {network ? network.name : ''}
         </span>
       </span>
     );
   }
 
-  let showWallet = "";
-  if (typeof signer !== "undefined" && address) {
+  let showWallet = '';
+  if (typeof signer !== 'undefined' && address) {
     showWallet = (
       <span>
         <span style={{ padding: 3 }}>
@@ -88,11 +89,15 @@ export default function Provider(props) {
     <Button
       shape="round"
       size="large"
-      onClick={() => {
-        setShowMore(!showMore);
-      }}
+      onClick={() => setShowMore(!showMore)}
     >
-      <Badge status={status} /> {props.name} {showWallet} #{blockNumber} {showExtra}
+      <Badge status={status} />
+      {name}
+      {showWallet}
+      {`#${blockNumber}`}
+      {showExtra}
     </Button>
   );
-}
+};
+
+export default Provider;

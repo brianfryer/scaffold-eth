@@ -1,16 +1,11 @@
-import React from "react";
-import { PageHeader } from "antd";
+import React from 'react';
+import { PageHeader } from 'antd';
 
-// displays a page header
+const Header = () => (
+  <PageHeader
+    subTitle="👩‍🔬 Buyer pays to mint NFT example"
+    title="🏗 scaffold-eth"
+  />
+);
 
-export default function Header() {
-  return (
-    <a href="https://github.com/austintgriffith/scaffold-eth" target="_blank" rel="noopener noreferrer">
-      <PageHeader
-        title="🏗 scaffold-eth"
-        subTitle="👩‍🔬 Buyer pays to mint NFT example"
-        style={{ cursor: "pointer" }}
-      />
-    </a>
-  );
-}
+export default Header;

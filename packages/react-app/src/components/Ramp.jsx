@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { Button, Modal, Divider } from "antd";
-import { DollarCircleOutlined } from "@ant-design/icons";
-import { RampInstantSDK } from "@ramp-network/ramp-instant-sdk";
+import React, { useState } from 'react';
+import { Button, Divider, Modal } from 'antd';
+import { DollarCircleOutlined } from '@ant-design/icons';
+import { RampInstantSDK } from '@ramp-network/ramp-instant-sdk';
 
 // added display of 0 if price={price} is not provided
 
@@ -13,8 +13,8 @@ import { RampInstantSDK } from "@ramp-network/ramp-instant-sdk";
 
   ~ How can I use? ~
 
-  <Ramp 
-    price={price} 
+  <Ramp
+    price={price}
     address={address}
   />
 
@@ -25,55 +25,51 @@ import { RampInstantSDK } from "@ramp-network/ramp-instant-sdk";
   - Provide address={address} and your address will be pasted into Wyre/Ramp instantly
 */
 
-export default function Ramp(props) {
-  const [modalUp, setModalUp] = useState("down");
+const Ramp = ({ networks, price, address }) => {
+  const [modalUp, setModalUp] = useState('down');
+  const type = 'default';
+  const sendWyreUrl = `https://pay.sendwyre.com/purchase?destCurrency=ETH&sourceAmount=25&dest=${address}`;
 
-  const type = "default";
-
-  let allFaucets = []
-  for(let n in props.networks){
-    if(props.networks[n].chainId!=31337&&props.networks[n].chainId!=1){
-      allFaucets.push(
-        <p key={props.networks[n].chainId}>
-          <Button
-            style={{color:props.networks[n].color}}
-            type={type}
-            size="large"
-            shape="round"
-            onClick={() => {
-              window.open(props.networks[n].faucet);
-            }}
-          >
-            {props.networks[n].name}
-          </Button>
-        </p>
-      )
-    }
-  }
+  const allFaucets = Object
+    .entries(networks)
+    .filter(([, value]) => value.chainId !== 31337 && value.chainId !== 1)
+    .map(([, {
+      chainId,
+      color,
+      faucet,
+      name,
+    }]) => (
+      <p key={chainId}>
+        <Button
+          style={{ color }}
+          type={type}
+          size="large"
+          shape="round"
+          onClick={() => window.open(faucet)}
+        >
+          {name}
+        </Button>
+      </p>
+    ));
 
   return (
     <div>
       <Button
         size="large"
         shape="round"
-        onClick={() => {
-          setModalUp("up");
-        }}
+        onClick={() => setModalUp('up')}
       >
-        <DollarCircleOutlined style={{ color: "#52c41a" }} /> {typeof props.price == "undefined" ? 0 : props.price.toFixed(2)}
+        <DollarCircleOutlined style={{ color: '#52c41a' }} />
+        {typeof price === 'undefined' ? 0 : price.toFixed(2)}
       </Button>
       <Modal
         title="Buy ETH"
-        visible={modalUp === "up"}
-        onCancel={() => {
-          setModalUp("down");
-        }}
+        visible={modalUp === 'up'}
+        onCancel={() => setModalUp('down')}
         footer={[
           <Button
             key="back"
-            onClick={() => {
-              setModalUp("down");
-            }}
+            onClick={() => setModalUp('down')}
           >
             cancel
           </Button>,
@@ -84,9 +80,7 @@ export default function Ramp(props) {
             type={type}
             size="large"
             shape="round"
-            onClick={() => {
-              window.open("https://pay.sendwyre.com/purchase?destCurrency=ETH&sourceAmount=25&dest=" + props.address);
-            }}
+            onClick={() => window.open(sendWyreUrl)}
           >
             <span style={{ paddingRight: 15 }} role="img">
               <span role="img" aria-label="flag-us">🇺🇸</span>
@@ -95,25 +89,24 @@ export default function Ramp(props) {
           </Button>
         </p>
         <p>
-          {" "}
           <Button
             type={type}
             size="large"
             shape="round"
-            onClick={() => {
+            onClick={() => (
               new RampInstantSDK({
-                hostAppName: "scaffold-eth",
-                hostLogoUrl: "https://scaffoldeth.io/scaffold-eth.png",
-                swapAmount: "100000000000000000", // 0.1 ETH in wei  ?
-                swapAsset: "ETH",
-                userAddress: props.address,
+                hostAppName: 'scaffold-eth',
+                hostLogoUrl: 'https://scaffoldeth.io/scaffold-eth.png',
+                swapAmount: '100000000000000000', // 0.1 ETH in wei  ?
+                swapAsset: 'ETH',
+                userAddress: address,
               })
-                .on("*", event => console.log(event))
-                .show();
-            }}
+                .on('*', (e) => console.log(e))
+                .show()
+            )}
           >
             <span style={{ paddingRight: 15 }} role="img">
-            <span role="img" aria-label="flag-gb">🇬🇧</span>
+              <span role="img" aria-label="flag-gb">🇬🇧</span>
             </span>
             Ramp
           </Button>
@@ -124,9 +117,7 @@ export default function Ramp(props) {
             type={type}
             size="large"
             shape="round"
-            onClick={() => {
-              window.open("https://www.coinbase.com/buy-ethereum");
-            }}
+            onClick={() => window.open('https://www.coinbase.com/buy-ethereum')}
           >
             <span style={{ paddingRight: 15 }} role="img" aria-label="bank">
               🏦
@@ -144,4 +135,6 @@ export default function Ramp(props) {
       </Modal>
     </div>
   );
-}
+};
+
+export default Ramp;
