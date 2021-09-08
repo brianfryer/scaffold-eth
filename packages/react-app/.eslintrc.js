@@ -1,27 +1,33 @@
 module.exports = {
+  extends: ['airbnb', 'airbnb/hooks'],
   env: {
     browser: true,
   },
-  extends: ['airbnb', 'plugin:prettier/recommended', 'prettier'],
-  plugins: ['babel'],
-  rules: {
-    'prettier/prettier': ['error'],
-    'import/extensions': [
-      'error',
-      'ignorePackages',
-      {
-        'js': 'never',
-        'jsx': 'never',
-        'ts': 'never',
-        'tsx': 'never'
-      },
-   ],
-    'import/prefer-default-export': 'off',
-    'prefer-destructuring': 'off',
-    'prefer-template': 'off',
-    'react/prop-types': 'off',
-    'react/destructuring-assignment': 'off',
-    'no-console': 'off',
-    'jsx-a11y/accessible-emoji': ['off'],
+  globals: {
+    __PATH_PREFIX__: true,
   },
+  parser: '@babel/eslint-parser',
+  parserOptions: {
+    babelOptions: {
+      presets: ['@babel/preset-react']
+    },
+    ecmaVersion: 2020,
+    requireConfigFile: false,
+  },
+  rules: {
+    'no-underscore-dangle': 'off',
+    'no-unused-vars': 'warn',
+    'react/jsx-props-no-spreading': 'off',
+    'react/prop-types': 'warn',
+  },
+  // settings: {
+  //   'import/resolver': {
+  //     'babel-module': {
+  //       root: ['./src'],
+  //       alias: {
+  //         '~': './src',
+  //       },
+  //     },
+  //   },
+  // },
 };
