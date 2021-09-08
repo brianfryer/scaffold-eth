@@ -1,9 +1,13 @@
 // import BufferList from 'bl';
+import Authereum from 'authereum';
+import Fortmatic from 'fortmatic';
 import ipfsAPI from 'ipfs-http-client';
+import Portis from '@portis/web3';
 import React, { useCallback, useEffect, useState } from 'react';
 import ReactJson from 'react-json-view';
 import StackGrid from 'react-stack-grid';
 import WalletConnectProvider from '@walletconnect/web3-provider';
+import WalletLink from 'walletlink';
 import Web3Modal from 'web3modal';
 import {
   Alert,
@@ -25,7 +29,7 @@ import {
   Link,
   Switch,
 } from 'react-router-dom';
-import { constants, utils } from 'ethers';
+import { ethers } from 'ethers';
 import { format } from 'date-fns';
 import { formatEther, parseEther } from '@ethersproject/units';
 import { JsonRpcProvider, Web3Provider } from '@ethersproject/providers';
@@ -49,7 +53,8 @@ import {
   useExchangePrice,
   useExternalContractLoader,
   useGasPrice,
-  useUserProvider,
+  useOnBlock,
+  useUserSigner,
 } from './hooks';
 // import { ExampleUI, Hints, Subgraph } from './views';
 import {
@@ -133,7 +138,6 @@ const getFromIPFS = async (hashToGet) => {
 };
 
 // 🛰 providers
-if (DEBUG) console.log('📡 Connecting to Mainnet Ethereum');
 
 // const mainnetProvider = getDefaultProvider('mainnet', {
 //   infura: INFURA_ID,
@@ -144,53 +148,124 @@ if (DEBUG) console.log('📡 Connecting to Mainnet Ethereum');
 
 // attempt to connect to our own scaffold eth rpc and if that fails fall back to infura...
 const scaffoldEthProvider = new JsonRpcProvider('https://rpc.scaffoldeth.io:48544');
+const poktMainnetProvider = navigator.onLine
+  ? new ethers.providers.StaticJsonRpcProvider(
+    'https://eth-mainnet.gateway.pokt.network/v1/lb/611156b4a585a20035148406',
+  )
+  : null;
 const mainnetInfura = new JsonRpcProvider(`https://mainnet.infura.io/v3/${INFURA_ID}`);
 // ( ⚠️ Getting "failed to meet quorum" errors? Check your INFURA_I
 
 // 🏠 Your local provider is usually pointed at your local blockchain
 const localProviderUrl = targetNetwork.rpcUrl;
-
 // as you deploy to other networks you can set REACT_APP_PROVIDER=https://dai.poa.network in packages/react-app/.env
 const localProviderUrlFromEnv = process.env.REACT_APP_PROVIDER
   ? process.env.REACT_APP_PROVIDER
   : localProviderUrl;
-
-if (DEBUG) console.log('🏠 Connecting to provider: ', localProviderUrlFromEnv);
-
-const localProvider = new JsonRpcProvider(localProviderUrlFromEnv);
+if (DEBUG) console.log('🏠 Connecting to provider:', localProviderUrlFromEnv);
+const localProvider = new ethers.providers.StaticJsonRpcProvider(localProviderUrlFromEnv);
 
 // 🔭 block explorer URL
 const { blockExplorer } = targetNetwork;
 
+// Coinbase walletLink init
+const walletLink = new WalletLink({
+  appName: 'coinbase',
+});
+
+// WalletLink provider
+const walletLinkProvider = walletLink.makeWeb3Provider(`https://mainnet.infura.io/v3/${INFURA_ID}`, 1);
+
 // Web3 modal helps us "connect" external wallets:
 const web3Modal = new Web3Modal({
-  // network: "mainnet", // optional
+  network: 'mainnet', // Optional. If using WalletConnect on xDai, change network to 'xdai' and add RPC info below for xDai chain.
   cacheProvider: true, // optional
+  theme: 'light', // optional. Change to 'dark' for a dark theme.
   providerOptions: {
     walletconnect: {
       package: WalletConnectProvider, // required
       options: {
+        bridge: 'https://polygon.bridge.walletconnect.org',
         infuraId: INFURA_ID,
+        rpc: {
+          1: `https://mainnet.infura.io/v3/${INFURA_ID}`, // mainnet // For more WalletConnect providers: https://docs.walletconnect.org/quick-start/dapps/web3-provider#required
+          42: `https://kovan.infura.io/v3/${INFURA_ID}`,
+          100: 'https://dai.poa.network', // xDai
+        },
       },
+    },
+    portis: {
+      display: {
+        logo: 'https://user-images.githubusercontent.com/9419140/128913641-d025bc0c-e059-42de-a57b-422f196867ce.png',
+        name: 'Portis',
+        description: 'Connect to Portis App',
+      },
+      package: Portis,
+      options: {
+        id: '6255fb2b-58c8-433b-a2c9-62098c05ddc9',
+      },
+    },
+    fortmatic: {
+      package: Fortmatic, // required
+      options: {
+        key: 'pk_live_5A7C91B2FC585A17', // required
+      },
+    },
+    // torus: {
+    //   package: Torus,
+    //   options: {
+    //     networkParams: {
+    //       host: "https://localhost:8545", // optional
+    //       chainId: 1337, // optional
+    //       networkId: 1337 // optional
+    //     },
+    //     config: {
+    //       buildEnv: "development" // optional
+    //     },
+    //   },
+    // },
+    'custom-walletlink': {
+      display: {
+        logo: 'https://play-lh.googleusercontent.com/PjoJoG27miSglVBXoXrxBSLveV6e3EeBPpNY55aiUUBM9Q1RCETKCOqdOkX2ZydqVf0',
+        name: 'Coinbase',
+        description: 'Connect to Coinbase Wallet (not Coinbase App)',
+      },
+      package: walletLinkProvider,
+      connector: async (provider, options) => {
+        await provider.enable();
+        return provider;
+      },
+    },
+    authereum: {
+      package: Authereum, // required
     },
   },
 });
 
-const logoutOfWeb3Modal = async () => {
-  await web3Modal.clearCachedProvider();
-  setTimeout(() => {
-    window.location.reload();
-  }, 1);
-};
-
 const App = () => {
-  const mainnetProvider = (scaffoldEthProvider && scaffoldEthProvider._network)
-    ? scaffoldEthProvider
-    : mainnetInfura;
-
-  if (DEBUG) console.log('🌎 mainnetProvider: ', mainnetProvider);
+  // eslint-disable-next-line no-nested-ternary
+  const mainnetProvider = poktMainnetProvider && poktMainnetProvider._isProvider
+    ? poktMainnetProvider
+    : scaffoldEthProvider && scaffoldEthProvider._network
+      ? scaffoldEthProvider
+      : mainnetInfura;
 
   const [injectedProvider, setInjectedProvider] = useState();
+  const [address, setAddress] = useState();
+
+  const logoutOfWeb3Modal = async () => {
+    await web3Modal.clearCachedProvider();
+    if (
+      injectedProvider
+      && injectedProvider.provider
+      && typeof injectedProvider.provider.disconnect === 'function'
+    ) {
+      await injectedProvider.provider.disconnect();
+    }
+    setTimeout(() => {
+      window.location.reload();
+    }, 1);
+  };
 
   // 💵 This hook will get the price of ETH from 🦄 Uniswap:
   const price = useExchangePrice(targetNetwork, mainnetProvider);
@@ -200,47 +275,56 @@ const App = () => {
 
   // Use your injected provider from 🦊 Metamask or if you
   // don't have it then instantly generate a 🔥 burner wallet.
-  const userProvider = useUserProvider(injectedProvider, localProvider);
-  const address = useUserAddress(userProvider);
+  const userSigner = useUserSigner(injectedProvider, localProvider);
 
-  if (DEBUG) console.log('👩‍💼 selected address: ', address);
+  useEffect(() => {
+    async function getAddress() {
+      if (userSigner) {
+        const newAddress = await userSigner.getAddress();
+        setAddress(newAddress);
+      }
+    }
+    getAddress();
+  }, [userSigner]);
 
   // You can warn the user if you would like them to be on a specific network
-  const localChainId = localProvider?._network?.chainId;
-  if (DEBUG) console.log('🏠 localChainId: ', localChainId);
-
-  const selectedChainId = userProvider?._network?.chainId;
-  if (DEBUG) console.log('🕵🏻‍♂️ selectedChainId: ', selectedChainId);
+  const localChainId = localProvider && localProvider._network && localProvider._network.chainId;
+  const selectedChainId = userSigner
+    && userSigner.provider
+    && userSigner.provider._network
+    && userSigner.provider._network.chainId;
 
   // For more hooks, check out 🔗eth-hooks at: https://www.npmjs.com/package/eth-hooks
 
   // The transactor wraps transactions and provides notificiations
-  const tx = Transactor(userProvider, gasPrice);
+  const tx = Transactor(userSigner, gasPrice);
 
   // Faucet Tx can be used to send funds from the faucet
   const faucetTx = Transactor(localProvider, gasPrice);
 
   // 🏗 scaffold-eth is full of handy hooks like this one to get your balance:
   const yourLocalBalance = useBalance(localProvider, address);
-  if (DEBUG) console.log('💵 yourLocalBalance: ', yourLocalBalance ? formatEther(yourLocalBalance) : '...');
 
   // Just plug in different 🛰 providers to get your balance on different chains:
   const yourMainnetBalance = useBalance(mainnetProvider, address);
-  if (DEBUG) console.log('💵 yourMainnetBalance: ', yourMainnetBalance ? formatEther(yourMainnetBalance) : '...');
 
   // Load in your local 📝 contract and read a value from it:
   const readContracts = useContractLoader(localProvider);
-  if (DEBUG) console.log('📝 readContracts: ', readContracts);
 
-  // If you want to make 🔐 write transactions to your contracts, use the userProvider:
-  const writeContracts = useContractLoader(userProvider);
-  if (DEBUG) console.log('🔐 writeContracts: ', writeContracts);
+  // If you want to make 🔐 write transactions to your contracts, use the userSigner:
+  const writeContracts = useContractLoader(userSigner, { chainId: localChainId });
 
   // EXTERNAL CONTRACT EXAMPLE:
   // If you want to bring in the mainnet DAI contract it would look like:
+  const mainnetContracts = useContractLoader(mainnetProvider);
+
+  // If you want to call a function on a new block
+  useOnBlock(mainnetProvider, () => {
+    console.log(`⛓ A new mainnet block is here: ${mainnetProvider._lastBlockNumber}`);
+  });
+
   const mainnetDAIContract = useExternalContractLoader(mainnetProvider, DAI_ADDRESS, DAI_ABI);
-  if (DEBUG) console.log('🌍 DAI contract on mainnet:', mainnetDAIContract);
-  //
+
   // Then read your DAI balance like:
   const myMainnetDAIBalance = useContractReader(
     { DAI: mainnetDAIContract },
@@ -248,15 +332,12 @@ const App = () => {
     'balanceOf',
     ['0x34aA3F359A9D614239015126635CE7732c18fDF3'],
   );
-  if (DEBUG) console.log('🥇 myMainnetDAIBalance: ', myMainnetDAIBalance);
 
   // keep track of a variable from the contract in the local React state:
   const balance = useContractReader(readContracts, 'YourCollectible', 'balanceOf', [address]);
-  if (DEBUG) console.log('🤗 balance: ', balance);
 
   // 📟 Listen for broadcast events
   const transferEvents = useEventListener(readContracts, 'YourCollectible', 'Transfer', localProvider, 1);
-  if (DEBUG) console.log('📟 Transfer events: ', transferEvents);
 
   const [modalVisible, setModalVisible] = useState(false);
   // const [viewModalVisible, setViewModalVisible] = useState(false); slack
@@ -287,7 +368,7 @@ const App = () => {
 
   //         try {
   //           const jsonManifest = JSON.parse(jsonManifestBuffer.toString());
-  //           // console.log("jsonManifest",jsonManifest)
+  //           // console.log('jsonManifest",jsonManifest)
   //           collectibleUpdate.push({
   //             id: tokenId,
   //             uri: tokenURI,
@@ -309,7 +390,47 @@ const App = () => {
   // }, [address, yourBalance]);
 
   // const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
-  // console.log("🏷 Resolved austingriffith.eth as:",addressFromENS)
+  // console.log('🏷 Resolved austingriffith.eth as:",addressFromENS)
+
+  //
+  // 🧫 DEBUG 👨🏻‍🔬
+  //
+  useEffect(() => {
+    if (
+      DEBUG
+      && address
+      && mainnetContracts
+      && mainnetProvider
+      && readContracts
+      && selectedChainId
+      && writeContracts
+      && yourLocalBalance
+      && yourMainnetBalance
+    ) {
+      console.log('_____________________________________ 🏗 scaffold-eth _____________________________________');
+      console.log('🌎 mainnetProvider', mainnetProvider);
+      console.log('🏠 localChainId', localChainId);
+      console.log('👩‍💼 selected address:', address);
+      console.log('🕵🏻‍♂️ selectedChainId:', selectedChainId);
+      console.log('💵 yourLocalBalance', yourLocalBalance ? ethers.utils.formatEther(yourLocalBalance) : '...');
+      console.log('💵 yourMainnetBalance', yourMainnetBalance ? ethers.utils.formatEther(yourMainnetBalance) : '...');
+      console.log('📝 readContracts', readContracts);
+      console.log('🌍 DAI contract on mainnet:', mainnetContracts);
+      console.log('💵 yourMainnetDAIBalance', myMainnetDAIBalance);
+      console.log('🔐 writeContracts', writeContracts);
+    }
+  }, [
+    address,
+    localChainId,
+    mainnetContracts,
+    mainnetProvider,
+    myMainnetDAIBalance,
+    readContracts,
+    selectedChainId,
+    writeContracts,
+    yourLocalBalance,
+    yourMainnetBalance,
+  ]);
 
   const networkDisplay = (localChainId && selectedChainId && localChainId !== selectedChainId)
     ? (
@@ -411,12 +532,12 @@ const App = () => {
 
   const updateYourCollectibles = useCallback(async () => {
     const assetUpdate = await Promise.all(Object.keys(assets).map(async (key) => {
-      const forSale = await readContracts.YourCollectible.forSale(utils.id(key));
+      const forSale = await readContracts.YourCollectible.forSale(ethers.utils.id(key));
       let owner;
       let auctionInfo;
 
       if (!forSale) {
-        const tokenId = await readContracts.YourCollectible.uriToTokenId(utils.id(key));
+        const tokenId = await readContracts.YourCollectible.uriToTokenId(ethers.utils.id(key));
         owner = await readContracts.YourCollectible.ownerOf(tokenId);
         const nftAddress = readContracts.YourCollectible.address;
         auctionInfo = await readContracts.Auction.getTokenAuctionDetails(nftAddress, tokenId);
@@ -446,7 +567,7 @@ const App = () => {
   };
 
   const placeBid = async (tokenUri, ethAmount) => {
-    const tokenId = await readContracts.YourCollectible.uriToTokenId(utils.id(tokenUri));
+    const tokenId = await readContracts.YourCollectible.uriToTokenId(ethers.utils.id(tokenUri));
     const nftAddress = readContracts.YourCollectible.address;
     await tx(writeContracts.Auction.bid(nftAddress, tokenId, {
       value: parseEther(ethAmount.toString()),
@@ -455,14 +576,14 @@ const App = () => {
   };
 
   const completeAuction = (tokenUri) => async () => {
-    const tokenId = await readContracts.YourCollectible.uriToTokenId(utils.id(tokenUri));
+    const tokenId = await readContracts.YourCollectible.uriToTokenId(ethers.utils.id(tokenUri));
     const nftAddress = readContracts.YourCollectible.address;
     await tx(writeContracts.Auction.executeSale(nftAddress, tokenId));
     updateYourCollectibles();
   };
 
   const cancelAuction = (tokenUri) => async () => {
-    const tokenId = await readContracts.YourCollectible.uriToTokenId(utils.id(tokenUri));
+    const tokenId = await readContracts.YourCollectible.uriToTokenId(ethers.utils.id(tokenUri));
     const nftAddress = readContracts.YourCollectible.address;
     await tx(writeContracts.Auction.cancelAution(nftAddress, tokenId));
     updateYourCollectibles();
@@ -541,7 +662,7 @@ const App = () => {
           <p style={{ fontWeight: 'bold' }}>Auction is in progress</p>
           <p style={{ margin: 0, marginBottom: 2 }}>
             Minimal price is
-            {utils.formatEther(auctionInfo.price)}
+            {ethers.utils.formatEther(auctionInfo.price)}
             ETH
           </p>
           <p style={{ marginTop: 0 }}>
@@ -550,7 +671,7 @@ const App = () => {
               : `Auction ends at ${format(deadline, 'MMMM dd, hh:mm:ss')}`}
           </p>
           <div>
-            {auctionInfo.maxBidUser === constants.AddressZero ? 'Highest bid was not made yet' : (
+            {auctionInfo.maxBidUser === ethers.constants.AddressZero ? 'Highest bid was not made yet' : (
               <>
                 Highest bid by:
                 <Address
@@ -560,7 +681,7 @@ const App = () => {
                   minimized
                 />
                 <p>
-                  {utils.formatEther(auctionInfo.maxBid)}
+                  {ethers.utils.formatEther(auctionInfo.maxBid)}
                   ETH
                 </p>
               </>
@@ -619,13 +740,13 @@ const App = () => {
   const handleOk = async () => {
     setModalVisible(false);
     const { price: p, duration } = auctionDetails;
-    const tokenId = await readContracts.YourCollectible.uriToTokenId(utils.id(auctionToken));
+    const tokenId = await readContracts.YourCollectible.uriToTokenId(ethers.utils.id(auctionToken));
 
     const auctionAddress = readContracts.Auction.address;
     const nftAddress = readContracts.YourCollectible.address;
     await writeContracts.YourCollectible.approve(auctionAddress, tokenId);
 
-    const ethPrice = utils.parseEther(p.toString());
+    const ethPrice = ethers.utils.parseEther(p.toString());
     const blockDuration = Math.floor(new Date().getTime() / 1000) + duration;
 
     await tx(writeContracts.Auction.createTokenAuction(
@@ -934,7 +1055,7 @@ const App = () => {
               blockExplorer={blockExplorer}
               name="YourCollectible"
               provider={localProvider}
-              signer={userProvider.getSigner()}
+              signer={userSigner?.getSigner()}
             />
           </Route>
         </Switch>
@@ -955,7 +1076,7 @@ const App = () => {
         <Account
           address={address}
           localProvider={localProvider}
-          userProvider={userProvider}
+          userSigner={userSigner}
           mainnetProvider={mainnetProvider}
           price={price}
           web3Modal={web3Modal}

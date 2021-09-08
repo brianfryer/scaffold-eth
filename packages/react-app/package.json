@@ -63,7 +63,9 @@
     "react-json-view": "^1.21.1",
     "react-qr-reader": "^2.2.1",
     "react-router-dom": "^5.2.0",
+    "react-scripts": "^4.0.3",
     "react-stack-grid": "^0.7.1",
+    "walletlink": "^2.1.5",
     "web3modal": "^1.9.1"
   },
   "devDependencies": {
@@ -73,10 +75,6 @@
     "@bobthered/tailwindcss-palette-generator": "^2.0.0",
     "@craco/craco": "^6.2.0",
     "@tailwindcss/typography": "^0.4.1",
-    "react-scripts": "^4.0.3",
-    "walletlink": "^2.1.5"
-  },
-  "devDependencies": {
     "@apollo/client": "^3.3.21",
     "@testing-library/dom": "^6.12.2",
     "@types/react": "^16.9.19",
