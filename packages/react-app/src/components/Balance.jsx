@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { useBalance } from "../hooks";
+import React, { useState } from 'react';
+import { formatEther } from '@ethersproject/units';
+import { usePoller } from 'eth-hooks';
 
-const { utils } = require("ethers");
+import { useBalance } from '../hooks';
 
 /*
   ~ What it does? ~
@@ -25,55 +26,66 @@ const { utils } = require("ethers");
   ~ Features ~
 
   - Provide address={address} and get balance corresponding to given address
-  - Provide provider={mainnetProvider} to access balance on mainnet or any other network (ex. localProvider)
+  - Provide provider={mainnetProvider} to access balance on mainnet
+    or any other network (ex. localProvider)
   - Provide price={price} of ether and get your balance converted to dollars
 */
 
-export default function Balance(props) {
+const Balance = ({
+  address,
+  balance,
+  dollarMultiplier,
+  price,
+  provider,
+  size,
+  value,
+}) => {
   const [dollarMode, setDollarMode] = useState(true);
+  const [listening, setListening] = useState(false);
 
-  // const [listening, setListening] = useState(false);
+  const _balance = useBalance(provider, address);
 
-  const balance = useBalance(props.provider, props.address);
+  let floatBalance = parseFloat('0.00');
 
-  let floatBalance = parseFloat("0.00");
+  let usingBalance = _balance;
 
-  let usingBalance = balance;
-
-  if (typeof props.balance !== "undefined") {
-    usingBalance = props.balance;
+  if (typeof balance !== 'undefined') {
+    usingBalance = balance;
   }
-  if (typeof props.value !== "undefined") {
-    usingBalance = props.value;
+  if (typeof value !== 'undefined') {
+    usingBalance = value;
   }
 
   if (usingBalance) {
-    const etherBalance = utils.formatEther(usingBalance);
+    const etherBalance = formatEther(usingBalance);
     parseFloat(etherBalance).toFixed(2);
     floatBalance = parseFloat(etherBalance);
   }
 
   let displayBalance = floatBalance.toFixed(4);
 
-  const price = props.price || props.dollarMultiplier;
+  const _price = price || dollarMultiplier;
 
-  if (price && dollarMode) {
-    displayBalance = "$" + (floatBalance * price).toFixed(2);
+  if (_price && dollarMode) {
+    displayBalance = `$${(floatBalance * _price).toFixed(2)}`;
   }
 
   return (
     <span
       style={{
-        verticalAlign: "middle",
-        fontSize: props.size ? props.size : 24,
+        cursor: 'pointer',
         padding: 8,
-        cursor: "pointer",
+        fontSize: size || 24,
+        verticalAlign: 'middle',
       }}
-      onClick={() => {
-        setDollarMode(!dollarMode);
-      }}
+      onClick={() => setDollarMode(!dollarMode)}
+      onKeyDown={() => setDollarMode(!dollarMode)}
+      role="button"
+      tabIndex={0}
     >
       {displayBalance}
     </span>
   );
-}
+};
+
+export default Balance;

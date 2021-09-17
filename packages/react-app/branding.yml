@@ -1,0 +1,10 @@
+colors:
+  - name: primary
+    hex: '#00cc00'
+fontFamily:
+  - key: heading
+    values:
+      - sans-serif
+  - key: body
+    values:
+      - sans-serif

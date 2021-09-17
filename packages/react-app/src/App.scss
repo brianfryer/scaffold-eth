@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  // @import 'antd/dist/antd.css';
+  // @import 'graphiql/graphiql.min.css';
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+
+    font-weight: theme('fontWeight.light');
+    line-height: theme('lineHeight.relaxed');
+  }
+
+  ::selection {
+    // color: theme('colors.white');
+    // background-color: theme('colors.black');
+  }
+}
+
+@layer components {
+  // @import './components/btn';
+}
+
+@layer utilities {
+  // @import './utilities/text';
+}

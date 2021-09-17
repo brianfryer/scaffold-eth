@@ -1,8 +1,9 @@
-import { Skeleton, Typography } from "antd";
-import React from "react";
-import Blockies from "react-blockies";
-import { useThemeSwitcher } from "react-css-theme-switcher";
-import { useLookupAddress } from "../hooks";
+import Blockies from 'react-blockies';
+import React from 'react';
+import { Skeleton, Typography } from 'antd';
+import { useThemeSwitcher } from 'react-css-theme-switcher';
+
+import { useLookupAddress } from '../hooks';
 
 // changed value={address} to address={address}
 
@@ -31,17 +32,23 @@ import { useLookupAddress } from "../hooks";
 
 const { Text } = Typography;
 
-const blockExplorerLink = (address, blockExplorer) =>
-  `${blockExplorer || "https://etherscan.io/"}${"address/"}${address}`;
+const blockExplorerLink = (address, blockExplorer) => `${blockExplorer || 'https://etherscan.io/'}${'address/'}${address}`;
 
-export default function Address(props) {
-  const address = props.value || props.address;
-
-  const ens = useLookupAddress(props.ensProvider, address);
-
+const Address = ({
+  address,
+  blockExplorer,
+  ensProvider,
+  fontSize,
+  minimized,
+  onChange,
+  size,
+  value,
+}) => {
+  const _address = value || address;
+  const ens = useLookupAddress(ensProvider, _address);
   const { currentTheme } = useThemeSwitcher();
 
-  if (!address) {
+  if (!_address) {
     return (
       <span>
         <Skeleton avatar paragraph={{ rows: 1 }} />
@@ -49,41 +56,42 @@ export default function Address(props) {
     );
   }
 
-  let displayAddress = address.substr(0, 6);
+  let displayAddress = _address.substr(0, 6);
 
-  if (ens && ens.indexOf("0x") < 0) {
+  if (ens?.indexOf('0x') < 0) {
     displayAddress = ens;
-  } else if (props.size === "short") {
-    displayAddress += "..." + address.substr(-4);
-  } else if (props.size === "long") {
-    displayAddress = address;
+  } else if (size === 'short') {
+    displayAddress += `...${_address.substr(-4)}`;
+  } else if (size === 'long') {
+    displayAddress = _address;
   }
 
-  const etherscanLink = blockExplorerLink(address, props.blockExplorer);
-  if (props.minimized) {
+  const etherscanLink = blockExplorerLink(_address, blockExplorer);
+
+  if (minimized) {
     return (
-      <span style={{ verticalAlign: "middle" }}>
+      <span style={{ verticalAlign: 'middle' }}>
         <a
-          style={{ color: currentTheme === "light" ? "#222222" : "#ddd" }}
-          target="_blank"
           href={etherscanLink}
           rel="noopener noreferrer"
+          style={{ color: currentTheme === 'light' ? '#222222' : '#ddd' }}
+          target="_blank"
         >
-          <Blockies seed={address.toLowerCase()} size={8} scale={2} />
+          <Blockies seed={_address.toLowerCase()} size={8} scale={2} />
         </a>
       </span>
     );
   }
 
   let text;
-  if (props.onChange) {
+  if (onChange) {
     text = (
-      <Text editable={{ onChange: props.onChange }} copyable={{ text: address }}>
+      <Text editable={{ onChange }} copyable={{ text: _address }}>
         <a
-          style={{ color: currentTheme === "light" ? "#222222" : "#ddd" }}
-          target="_blank"
           href={etherscanLink}
           rel="noopener noreferrer"
+          style={{ color: currentTheme === 'light' ? '#222222' : '#ddd' }}
+          target="_blank"
         >
           {displayAddress}
         </a>
@@ -91,12 +99,12 @@ export default function Address(props) {
     );
   } else {
     text = (
-      <Text copyable={{ text: address }}>
+      <Text copyable={{ text: _address }}>
         <a
-          style={{ color: currentTheme === "light" ? "#222222" : "#ddd" }}
-          target="_blank"
           href={etherscanLink}
           rel="noopener noreferrer"
+          style={{ color: currentTheme === 'light' ? '#222222' : '#ddd' }}
+          target="_blank"
         >
           {displayAddress}
         </a>
@@ -106,12 +114,24 @@ export default function Address(props) {
 
   return (
     <span>
-      <span style={{ verticalAlign: "middle" }}>
-        <Blockies seed={address.toLowerCase()} size={8} scale={props.fontSize ? props.fontSize / 7 : 4} />
+      <span style={{ verticalAlign: 'middle' }}>
+        <Blockies
+          seed={_address.toLowerCase()}
+          size={8}
+          scale={fontSize ? fontSize / 7 : 4}
+        />
       </span>
-      <span style={{ verticalAlign: "middle", paddingLeft: 5, fontSize: props.fontSize ? props.fontSize : 28 }}>
+      <span
+        style={{
+          verticalAlign: 'middle',
+          paddingLeft: 5,
+          fontSize: fontSize || 28,
+        }}
+      >
         {text}
       </span>
     </span>
   );
-}
+};
+
+export default Address;

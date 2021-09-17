@@ -1,5 +1,5 @@
-import { constants } from "ethers";
-import { useEffect, useState } from "react";
+import { AddressZero } from '@ethersproject/constants';
+import { useState, useEffect } from 'react';
 
 /*
   ~ What it does? ~
@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 
   ~ How can I use? ~
 
-  const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
+  const addressFromENS = useResolveName(mainnetProvider, 'austingriffith.eth');
 
   ~ Features ~
 
@@ -17,11 +17,11 @@ import { useEffect, useState } from "react";
 */
 
 const useResolveName = (provider, ensName) => {
-  const [address, setAddress] = useState(constants.AddressZero);
+  const [address, setAddress] = useState(AddressZero);
 
   useEffect(() => {
     if (provider) {
-      provider.resolveName(ensName).then(resolvedAddress => setAddress(resolvedAddress));
+      provider.resolveName(ensName).then((resolvedAddress) => setAddress(resolvedAddress));
     }
   }, [provider, ensName]);
 

@@ -1,14 +1,12 @@
-import { useState, useEffect } from "react";
+import { ethers } from 'ethers';
+import { useState, useEffect } from 'react';
 
-const { ethers } = require("ethers");
-
-export default function useBurnerSigner(provider) {
-  const key = "metaPrivateKey";
-  let wallet;
+const useBurnerSigner = (provider) => {
+  const key = 'metaPrivateKey';
   const [signer, setSigner] = useState();
   const [storedValue, setStoredValue] = useState();
 
-  const setValue = value => {
+  const setValue = (value) => {
     try {
       setStoredValue(value);
       window.localStorage.setItem(key, value);
@@ -20,7 +18,7 @@ export default function useBurnerSigner(provider) {
   useEffect(() => {
     const storedKey = window.localStorage.getItem(key);
     if (!storedKey) {
-      console.log("generating a new key");
+      console.log('generating a new key');
       const _newWallet = ethers.Wallet.createRandom();
       const _newKey = _newWallet.privateKey;
       setValue(_newKey);
@@ -30,6 +28,7 @@ export default function useBurnerSigner(provider) {
   }, []);
 
   useEffect(() => {
+    let wallet;
     if (storedValue && provider) {
       wallet = new ethers.Wallet(storedValue);
       const _signer = wallet.connect(provider);
@@ -38,4 +37,6 @@ export default function useBurnerSigner(provider) {
   }, [storedValue, provider]);
 
   return signer;
-}
+};
+
+export default useBurnerSigner;

@@ -1,9 +1,14 @@
-import { Col, Divider, Row } from "antd";
-import React, { useCallback, useEffect, useState } from "react";
-import tryToDisplay from "./utils";
+import React, { useCallback, useEffect, useState } from 'react';
+import { Col, Divider, Row } from 'antd';
+import tryToDisplay from './utils';
 
-const DisplayVariable = ({ contractFunction, functionInfo, refreshRequired, triggerRefresh }) => {
-  const [variable, setVariable] = useState("");
+const DisplayVariable = ({
+  contractFunction,
+  functionInfo,
+  refreshRequired,
+  triggerRefresh,
+}) => {
+  const [variable, setVariable] = useState('');
 
   const refresh = useCallback(async () => {
     try {
@@ -25,10 +30,10 @@ const DisplayVariable = ({ contractFunction, functionInfo, refreshRequired, trig
         <Col
           span={8}
           style={{
-            textAlign: "right",
+            fontSize: 24,
             opacity: 0.333,
             paddingRight: 6,
-            fontSize: 24,
+            textAlign: 'right',
           }}
         >
           {functionInfo.name}
@@ -38,9 +43,9 @@ const DisplayVariable = ({ contractFunction, functionInfo, refreshRequired, trig
         </Col>
         <Col span={2}>
           <h2>
-            <a href="#" onClick={refresh}>
+            <button onClick={refresh} type="button">
               🔄
-            </a>
+            </button>
           </h2>
         </Col>
       </Row>

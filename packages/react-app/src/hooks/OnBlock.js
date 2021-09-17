@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef } from 'react';
 
 // helper hook to call a function regularly in time intervals
 const DEBUG = false;
 
-export default function useOnBlock(provider, fn, args) {
+const useOnBlock = (provider, fn, args) => {
   const savedCallback = useRef();
   // Remember the latest fn.
   useEffect(() => {
@@ -11,9 +11,10 @@ export default function useOnBlock(provider, fn, args) {
   }, [fn]);
 
   // Turn on the listener if we have a function & a provider
+  // eslint-disable-next-line consistent-return
   useEffect(() => {
     if (fn && provider) {
-      const listener = blockNumber => {
+      const listener = (blockNumber) => {
         if (DEBUG) console.log(blockNumber, fn, args, provider.listeners());
 
         if (args && args.length > 0) {
@@ -23,11 +24,10 @@ export default function useOnBlock(provider, fn, args) {
         }
       };
 
-      provider.on("block", listener);
-
-      return () => {
-        provider.off("block", listener);
-      };
+      provider.on('block', listener);
+      return () => provider.off('block', listener);
     }
-  }, [provider]);
-}
+  }, [args, fn, provider]);
+};
+
+export default useOnBlock;

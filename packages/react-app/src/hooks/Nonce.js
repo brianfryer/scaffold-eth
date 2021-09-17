@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-export default function useNonce(mainnetProvider, address) {
+const useNonce = (mainnetProvider, address) => {
   const [nonce, setNonce] = useState(0);
 
   const Nonce = () => {
@@ -9,6 +9,10 @@ export default function useNonce(mainnetProvider, address) {
     }
     if (address) getNonce();
   };
+
   Nonce();
+
   return nonce;
-}
+};
+
+export default useNonce;

@@ -10,6 +10,7 @@
   ],
   "private": true,
   "scripts": {
+    "postinstall": "patch-package",
     "react-app:build": "yarn workspace @scaffold-eth/react-app build --max-old-space-size=12288",
     "react-app:eject": "yarn workspace @scaffold-eth/react-app eject",
     "react-app:start": "yarn workspace @scaffold-eth/react-app start",
@@ -50,6 +51,8 @@
     "graph-deploy-local": "yarn workspace @scaffold-eth/subgraph graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 scaffold-eth/your-contract",
     "graph-ship-local": "yarn graph-prepare && yarn graph-codegen && yarn graph-deploy-local",
     "deploy-and-graph": "yarn deploy && yarn graph-ship-local",
+    "upload": "yarn workspace @scaffold-eth/hardhat upload",
+    "mint": "yarn workspace @scaffold-eth/hardhat mint",
     "theme": "yarn workspace @scaffold-eth/react-app theme",
     "watch-theme": "yarn workspace @scaffold-eth/react-app watch"
   },
@@ -64,5 +67,13 @@
       "**/hardhat/**"
     ]
   },
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "patch-package": "^6.4.7"
+  },
+  "resolutions": {
+    "autoprefixer": "^10.3.3",
+    "postcss": "^8.3.6",
+    "postcss-normalize": "^10.0.0"
+  }
 }
